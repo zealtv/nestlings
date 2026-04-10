@@ -33,12 +33,12 @@ The tended file appears in `done/sample.txt`.
 
 ## Safe writes
 
-Files are only tended when they end in `.ready`. Writers must:
+A file in the inbox is hatching while it is being written. Writers must:
 
-1. write to `name.incoming`
-2. rename to `name.ready` once the write is complete
+1. write to `name.hatching`
+2. rename to `name` once the write is complete
 
-This avoids tending half-written files.
+The nestling skips anything still ending in `.hatching`, so half-written files are never tended.
 
 ## Notes
 

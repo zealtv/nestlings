@@ -8,10 +8,10 @@ mkdir -p "$INBOX"
 MESSAGE="${1:-hello}"
 NAME="${2:-sample.txt}"
 
-STAGED="$INBOX/$NAME.incoming"
-READY="$INBOX/$NAME.ready"
+HATCHING="$INBOX/$NAME.hatching"
+FINAL="$INBOX/$NAME"
 
-printf '%s\n' "$MESSAGE" > "$STAGED"
-mv "$STAGED" "$READY"
+printf '%s\n' "$MESSAGE" > "$HATCHING"
+mv "$HATCHING" "$FINAL"
 
-echo "fed $READY"
+echo "fed $FINAL"

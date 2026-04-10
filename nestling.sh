@@ -20,45 +20,45 @@ log() {
 
 tend() {
   local src="$1"
-  local ready_name name staged final
-  ready_name="$(basename "$src")"
-  name="${ready_name%.ready}"
-  staged="$DONE/$name.incoming"
+  local name hatching final
+  name="$(basename "$src")"
+  hatching="$DONE/$name.hatching"
   final="$DONE/$name"
 
   if ! content=$(cat "$src"); then
-    mv "$src" "$FAILED/$ready_name"
-    log "FAIL" "$ready_name" "could not read"
+    mv "$src" "$FAILED/$name"
+    log "FAIL" "$name" "could not read"
     return
   fi
 
   {
     printf '[tended by nestling]\n'
     printf '%s\n' "$content"
-  } > "$staged" || {
-    rm -f "$staged"
-    mv "$src" "$FAILED/$ready_name"
-    log "FAIL" "$ready_name" "could not write"
+  } > "$hatching" || {
+    rm -f "$hatching"
+    mv "$src" "$FAILED/$name"
+    log "FAIL" "$name" "could not write"
     return
   }
 
-  if ! mv "$staged" "$final"; then
-    rm -f "$staged"
-    mv "$src" "$FAILED/$ready_name"
-    log "FAIL" "$ready_name" "could not place in done"
+  if ! mv "$hatching" "$final"; then
+    rm -f "$hatching"
+    mv "$src" "$FAILED/$name"
+    log "FAIL" "$name" "could not place in done"
     return
   fi
 
   rm -f "$src"
-  log "OK" "$ready_name" "tended"
+  log "OK" "$name" "tended"
 }
 
 echo "nestling tending its nest (POLL_INTERVAL=$POLL_INTERVAL)"
 log "START" "-" "nestling started"
 
 while true; do
-  for src in "$INBOX"/*.ready; do
+  for src in "$INBOX"/*; do
     [ -f "$src" ] || continue
+    case "$src" in *.hatching) continue;; esac
     tend "$src"
   done
   sleep "$POLL_INTERVAL"

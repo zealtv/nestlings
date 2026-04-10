@@ -10,10 +10,10 @@ A nestling that tends its nest. The repo root *is* the nest. `inbox/`, `done/`, 
 
 1. Keep it local-first and file-system based.
 2. Do not add networking, queues, databases, or encryption unless asked.
-3. Preserve the staged write protection:
-   - write to `.incoming`
-   - rename to `.ready`
-   - only tend `.ready`
+3. Preserve the hatching write protection:
+   - write to `name.hatching`
+   - rename to `name`
+   - never tend a file still ending in `.hatching`
 4. Keep `POLL_INTERVAL` configurable.
 5. Preserve `failed/` and `log/`.
 6. Prefer readability over abstraction.
@@ -22,7 +22,7 @@ A nestling that tends its nest. The repo root *is* the nest. `inbox/`, `done/`, 
 ## When editing
 
 - Do not silently change the nest layout.
-- Do not remove the `.incoming` / `.ready` suffixes.
+- Do not remove the `.hatching` write protection.
 - Do not turn the demo into a framework.
 - Keep the language plain: a nestling tends its nest.
 
