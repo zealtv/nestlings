@@ -1,27 +1,57 @@
 # 🪺 nestlings
 
-A nestling tends its nest.
+A tiny, file-based protocol for agents that tend a folder.
 
-A nestling is an agent responsible for a folder — a script, an AI, or a human. This repo *is* a nest.
+## Words
+
+- **nest** — a `.nest/` folder at the root of any directory.
+- **nestling** — the agent that tends the nest. A script, an AI, or a human.
+- **tend** — read a file from the nest, do work, place the result.
+- **hatching** — a file still being written. Suffixed `.hatching`. Never tended.
+
+## The protocol
+
+- A nest is a `.nest/` folder with four children: `in/`, `done/`, `failed/`, `log/`.
+- A nestling watches `.nest/in/` and tends each file it finds there.
+- To add a file, write `name.hatching`, then rename it to `name`. Nestlings skip anything still ending in `.hatching`.
+- On success, the file moves to `.nest/done/` and one line is appended to `.nest/log/nestling.log`.
+- On failure, the file moves to `.nest/failed/` and the error is logged.
+- The file system is the protocol. No network, no database, no queue, no dependencies.
 
 ## The nest
 
 ```
-inbox/    files waiting to be tended
-done/     files the nestling has tended
-failed/   files the nestling could not tend
-log/      a plain text record of what happened
+.nest/
+  in/       files waiting to be tended
+  done/     files the nestling has tended
+  failed/   files the nestling could not tend
+  log/      a plain-text record of what happened
 ```
 
-## Run the nestling
+## File states
+
+- `name.hatching` — being written. Off limits.
+- `name` — ready in `.nest/in/`.
+- `.nest/done/name` — tended.
+- `.nest/failed/name` — kept for inspection.
+
+## Log format
+
+One line per event in `.nest/log/nestling.log`:
+
+```
+timestamp | nestling | event | filename | message
+```
+
+Events: `START`, `OK`, `FAIL`.
+
+## Run the demo
 
 ```bash
 ./nestling.sh
 ```
 
-It watches `inbox/`, tends each `*.ready` file, and places the result in `done/`.
-
-## Feed the nest
+The nestling watches `.nest/in/` and tends each file it finds.
 
 In another terminal:
 
@@ -29,18 +59,18 @@ In another terminal:
 ./feed.sh "hello"
 ```
 
-The tended file appears in `done/sample.txt`.
+Within a second, `.nest/done/sample.txt` appears with `[tended by nestling]` on the first line.
 
-## Safe writes
+## Configuration
 
-A file in the inbox is hatching while it is being written. Writers must:
+- `POLL_INTERVAL=1` — seconds between polls.
 
-1. write to `name.hatching`
-2. rename to `name` once the write is complete
+## Non-goals
 
-The nestling skips anything still ending in `.hatching`, so half-written files are never tended.
+This is not a workflow engine. It exists to show one thing clearly:
 
-## Notes
+- folder-based tending
+- hatching write protection
+- plain failure handling
 
-- Polling interval: `POLL_INTERVAL=1`
-- No network, no database, no queue, no dependencies
+Point an agent at this repo and ask it to add a nest to any folder. The conventions above are the whole protocol.

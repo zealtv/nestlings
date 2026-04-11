@@ -1,10 +1,10 @@
 # AGENTS.md
 
-Notes for coding agents that maintain this repo.
+Notes for coding agents that maintain this repo. The protocol lives in [README.md](README.md) — read it first.
 
 ## What this repo is
 
-A nestling that tends its nest. The repo root *is* the nest. `inbox/`, `done/`, `failed/`, and `log/` live at the top level. `nestling.sh` tends them.
+A working example of the nest protocol. `nestling.sh` is a reference nestling. `.nest/` is the nest it tends.
 
 ## Rules
 
@@ -15,14 +15,14 @@ A nestling that tends its nest. The repo root *is* the nest. `inbox/`, `done/`, 
    - rename to `name`
    - never tend a file still ending in `.hatching`
 4. Keep `POLL_INTERVAL` configurable.
-5. Preserve `failed/` and `log/`.
+5. Preserve `.nest/failed/` and `.nest/log/`.
 6. Prefer readability over abstraction.
 7. No dependencies.
 
 ## When editing
 
-- Do not silently change the nest layout.
-- Do not remove the `.hatching` write protection.
+- Do not change the nest layout silently. `.nest/{in,done,failed,log}` is the protocol.
+- Do not remove the hatching write protection.
 - Do not turn the demo into a framework.
 - Keep the language plain: a nestling tends its nest.
 

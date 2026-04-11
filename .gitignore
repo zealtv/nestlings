@@ -1,6 +1,6 @@
 .DS_Store
-/inbox/*
-/done/*
-/failed/*
-/log/*
+/.nest/in/*
+/.nest/done/*
+/.nest/failed/*
+/.nest/log/*
 !.gitkeep

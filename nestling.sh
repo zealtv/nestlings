@@ -3,14 +3,15 @@ set -u
 
 POLL_INTERVAL="${POLL_INTERVAL:-1}"
 
-NEST="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INBOX="$NEST/inbox"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NEST="$ROOT/.nest"
+IN="$NEST/in"
 DONE="$NEST/done"
 FAILED="$NEST/failed"
 LOG_DIR="$NEST/log"
 LOG_FILE="$LOG_DIR/nestling.log"
 
-mkdir -p "$INBOX" "$DONE" "$FAILED" "$LOG_DIR"
+mkdir -p "$IN" "$DONE" "$FAILED" "$LOG_DIR"
 touch "$LOG_FILE"
 
 log() {
@@ -56,7 +57,7 @@ echo "nestling tending its nest (POLL_INTERVAL=$POLL_INTERVAL)"
 log "START" "-" "nestling started"
 
 while true; do
-  for src in "$INBOX"/*; do
+  for src in "$IN"/*; do
     [ -f "$src" ] || continue
     case "$src" in *.hatching) continue;; esac
     tend "$src"

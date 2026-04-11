@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -eu
 
-NEST="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INBOX="$NEST/inbox"
-mkdir -p "$INBOX"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+IN="$ROOT/.nest/in"
+mkdir -p "$IN"
 
 MESSAGE="${1:-hello}"
 NAME="${2:-sample.txt}"
 
-HATCHING="$INBOX/$NAME.hatching"
-FINAL="$INBOX/$NAME"
+HATCHING="$IN/$NAME.hatching"
+FINAL="$IN/$NAME"
 
 printf '%s\n' "$MESSAGE" > "$HATCHING"
 mv "$HATCHING" "$FINAL"
