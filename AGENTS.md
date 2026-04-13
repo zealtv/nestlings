@@ -1,36 +1,36 @@
 # AGENTS.md
 
-Notes for coding agents that maintain this repo. The protocol lives in [README.md](README.md) — read it first.
+A minimal example of an `AGENTS.md` for a nest.
 
-## What this repo is
+Read [README.md](README.md) for the protocol.
 
-A working example of the nest protocol. `nestling.sh` is a reference nestling. `.nest/` is the nest it tends.
+## Read order
+
+1. `README.md` — the protocol
+2. `AGENTS.md` — local operating rules
+3. `instructions.md` — task-specific instructions, if present
 
 ## Rules
 
 1. Keep it local-first and file-system based.
-2. Do not add networking, queues, databases, or encryption unless asked.
-3. Preserve the hatching write protection:
+2. Preserve the nest layout: `.nest/{in,out,failed,log}`.
+3. Preserve hatching write protection:
    - write to `name.hatching`
    - rename to `name`
-   - never tend a file still ending in `.hatching`
-4. Keep `POLL_INTERVAL` configurable.
-5. Preserve `.nest/failed/` and `.nest/log/`.
-6. Prefer readability over abstraction.
-7. No dependencies.
+   - never tend anything still ending in `.hatching`
+4. Preserve `.nest/failed/` and `.nest/log/`.
+5. Prefer small, readable scripts.
+6. Do not add networking, queues, databases, encryption, or dependencies unless asked.
+7. Do not turn the example into a framework.
 
-## When editing
+## instructions.md
 
-- Do not change the nest layout silently. `.nest/{in,done,failed,log}` is the protocol.
-- Do not remove the hatching write protection.
-- Do not turn the demo into a framework.
-- Keep the language plain: a nestling tends its nest.
+If `instructions.md` is present, read it before tending the nest.
 
-## Safe extensions
+It is for whomever tends the nest:
 
-Only when asked:
+- a human should follow it
+- an AI agent should inspect it and carry it out
+- a script should treat it as the process description
 
-- metadata sidecar files
-- retry counts
-- extension filters
-- checksum or size checks
+Keep task-specific behavior in `instructions.md`, not here.

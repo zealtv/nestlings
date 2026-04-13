@@ -6,12 +6,12 @@ POLL_INTERVAL="${POLL_INTERVAL:-1}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NEST="$ROOT/.nest"
 IN="$NEST/in"
-DONE="$NEST/done"
+OUT="$NEST/out"
 FAILED="$NEST/failed"
 LOG_DIR="$NEST/log"
 LOG_FILE="$LOG_DIR/nestling.log"
 
-mkdir -p "$IN" "$DONE" "$FAILED" "$LOG_DIR"
+mkdir -p "$IN" "$OUT" "$FAILED" "$LOG_DIR"
 touch "$LOG_FILE"
 
 log() {
@@ -19,38 +19,26 @@ log() {
     "$(date '+%Y-%m-%d %H:%M:%S')" "$1" "$2" "$3" >> "$LOG_FILE"
 }
 
-tend() {
+store() {
   local src="$1"
   local name hatching final
   name="$(basename "$src")"
-  hatching="$DONE/$name.hatching"
-  final="$DONE/$name"
+  hatching="$OUT/$name.hatching"
+  final="$OUT/$name"
 
-  if ! content=$(cat "$src"); then
-    mv "$src" "$FAILED/$name"
-    log "FAIL" "$name" "could not read"
+  if ! mv "$src" "$hatching"; then
+    mv "$src" "$FAILED/$name" 2>/dev/null || true
+    log "FAIL" "$name" "could not move to out staging"
     return
   fi
-
-  {
-    printf '[tended by nestling]\n'
-    printf '%s\n' "$content"
-  } > "$hatching" || {
-    rm -f "$hatching"
-    mv "$src" "$FAILED/$name"
-    log "FAIL" "$name" "could not write"
-    return
-  }
 
   if ! mv "$hatching" "$final"; then
-    rm -f "$hatching"
-    mv "$src" "$FAILED/$name"
-    log "FAIL" "$name" "could not place in done"
+    mv "$hatching" "$FAILED/$name" 2>/dev/null || true
+    log "FAIL" "$name" "could not place in out"
     return
   fi
 
-  rm -f "$src"
-  log "OK" "$name" "tended"
+  log "OK" "$name" "stored in out"
 }
 
 echo "nestling tending its nest (POLL_INTERVAL=$POLL_INTERVAL)"
@@ -58,9 +46,9 @@ log "START" "-" "nestling started"
 
 while true; do
   for src in "$IN"/*; do
-    [ -f "$src" ] || continue
+    [ -e "$src" ] || continue
     case "$src" in *.hatching) continue;; esac
-    tend "$src"
+    store "$src"
   done
   sleep "$POLL_INTERVAL"
 done
