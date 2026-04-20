@@ -13,15 +13,17 @@ Read [README.md](README.md) for the protocol.
 ## Rules
 
 1. Keep it local-first and file-system based.
-2. Preserve the nest layout: `.nest/{in,out,failed,log}`.
+2. Preserve the nest layout: `.nest/{in,out,unhatched}`.
 3. Preserve hatching write protection:
    - write to `name.hatching`
    - rename to `name`
    - never tend anything still ending in `.hatching`
-4. Preserve `.nest/failed/` and `.nest/log/`.
-5. Prefer small, readable scripts.
-6. Do not add networking, queues, databases, encryption, or dependencies unless asked.
-7. Do not turn the example into a framework.
+4. Preserve the `.tending` claim convention: rename `in/name` → `in/name.tending` before processing, and never tend anything still ending in `.tending`.
+5. On failure, move the item to `.nest/unhatched/name` and write a sibling `name.reason.md` explaining why.
+6. Activity (startup, failures) goes to stderr. Do not reintroduce a log file inside `.nest/`.
+7. Prefer small, readable scripts.
+8. Do not add networking, queues, databases, encryption, or dependencies unless asked.
+9. Do not turn the example into a framework.
 
 ## instructions.md
 

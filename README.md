@@ -2,33 +2,55 @@
 
 A tiny, file-based protocol for agents that tend a folder.
 
+`nestling.sh` is the whole thing. One script, one folder convention.
+
+## Install
+
+Drop `nestling.sh` into any folder and run it. The nest is created on first run.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zealtv/nestlings/main/nestling.sh -o nestling.sh
+chmod +x nestling.sh
+./nestling.sh
+```
+
+Or from a clone:
+
+```bash
+cp /path/to/nestlings/nestling.sh .
+./nestling.sh
+```
+
+That is the whole install. There is no package, no manifest, no scaffolder. The optional helpers in `examples/` (`feed.sh`, `sweep.sh`, `telegram_inbox.py`) can be copied alongside if you want them.
+
 ## Terminology
 
 - **nest** — a `.nest/` folder at the root of a project.
 - **nestling** — anything that tends the nest: a script, an AI, or a human.
 - **tend** — notice a ready item in `in/` and handle it.
 - **hatching** — an item still being written. It ends in `.hatching` and must be ignored.
+- **tending** — an item a nestling has claimed. It ends in `.tending` and other nestlings must skip it.
+- **unhatched** — an item that could not be tended. It is moved to `unhatched/` with a `.reason.md` sibling.
 
 ## The protocol
 
-A nest is a `.nest/` folder with four children:
+A nest is a `.nest/` folder with three children:
 
 ```text
 .nest/
-  in/       ready items waiting to be tended
-  out/      tended items for other agents to collect
-  failed/   items that could not be tended
-  log/      a plain-text record of what happened
+  in/         ready items waiting to be tended
+  out/        tended items for other agents to collect
+  unhatched/  items that could not be tended, with a .reason.md sibling
 ```
 
 Rules:
 
 - Write new items as `name.hatching`, then rename to `name` when complete.
-- Never tend anything still ending in `.hatching`.
+- Never tend anything still ending in `.hatching` or `.tending`.
 - Nestlings watch `.nest/in/` for ready files or directories.
-- On success, the tended item moves to `.nest/out/`.
-- On failure, the item moves to `.nest/failed/`.
-- Append one line per event to `.nest/log/nestling.log`.
+- A nestling claims an item by renaming `in/name` → `in/name.tending` before processing. `mv` is atomic on a single filesystem; the rename is the claim.
+- On success, the item is removed from `in/` (typically moved to `.nest/out/` using the same hatching protection on the way in).
+- On failure, the item moves to `.nest/unhatched/name`, with a human- and agent-readable `unhatched/name.reason.md` next to it.
 - The file system is the protocol. No network, no database, no queue, no dependencies.
 
 
@@ -38,36 +60,29 @@ A nestling may process an item, enrich it, sort it, archive it, or simply ingest
 
 - `name.hatching` — being written. Off limits.
 - `name` — ready in `.nest/in/`.
+- `name.tending` — claimed by a nestling, in progress. Other nestlings skip it.
 - `.nest/out/name` — tended and stored.
-- `.nest/failed/name` — kept for inspection.
+- `.nest/unhatched/name` — kept for inspection, alongside `name.reason.md`.
 
-## Log format
+## Activity output
 
-One line per event in `.nest/log/nestling.log`:
-
-```text
-timestamp | nestling | event | filename | message
-```
-
-Events: `START`, `OK`, `FAIL`.
-
-## Run the demo
-
-Start the reference nestling:
+Nestlings write startup and failure events to **stderr**, not to a log file. The filesystem already records success (items appear in `out/`) and failure (items appear in `unhatched/` with a `.reason.md`). If you want a persistent log, redirect:
 
 ```bash
-./nestling.sh
+./nestling.sh 2>> nestling.log
 ```
 
-It watches `.nest/in/` and moves each ready item to `.nest/out/`.
+## Feeding the nest
+
+With `nestling.sh` running, push items into `.nest/in/` and watch them flow to `.nest/out/`. The `examples/feed.sh` helper does this for you.
 
 ### Feed plain text
 
 ```bash
-./feed.sh --text "hello"
+./examples/feed.sh --text "hello"
 ```
 
-If you omit the name, `feed.sh` creates a short unique text filename such as:
+If you omit the name, `examples/feed.sh` creates a short unique text filename such as:
 
 ```text
 note-20260413-214500-12345.txt
@@ -76,30 +91,30 @@ note-20260413-214500-12345.txt
 You can also provide a name:
 
 ```bash
-./feed.sh --text "hello" note.txt
+./examples/feed.sh --text "hello" note.txt
 ```
 
 ### Feed an existing file
 
 ```bash
-./feed.sh path/to/file.txt
+./examples/feed.sh path/to/file.txt
 ```
 
 ### Feed an existing directory
 
 ```bash
-./feed.sh path/to/folder
+./examples/feed.sh path/to/folder
 ```
 
 ### Hand off ownership instead of copying
 
 ```bash
-./feed.sh --move path/to/file.txt
+./examples/feed.sh --move path/to/file.txt
 ```
 
-`feed.sh` defaults to `--copy`. That is the safer choice for agents because the source item stays in place. In both modes, the script writes to `.nest/in/name.hatching` first and renames to `.nest/in/name` only when complete.
+`examples/feed.sh` defaults to `--copy`. That is the safer choice for agents because the source item stays in place. In both modes, the script writes to `.nest/in/name.hatching` first and renames to `.nest/in/name` only when complete.
 
-If the destination name already exists, `feed.sh` fails immediately.
+If the destination name already exists, `examples/feed.sh` fails immediately.
 
 ## Instruction items
 
@@ -140,7 +155,7 @@ This item contains instructions for whoever tends this nest.
 
 ## Telegram inbox bot
 
-This repo includes `telegram_inbox.py` as an optional inbox bot.
+This repo includes `examples/telegram_inbox.py` as an optional inbox bot.
 
 By default it writes directly to `.nest/in/`.
 
@@ -158,7 +173,7 @@ pip install python-telegram-bot
 export TELEGRAM_BOT_TOKEN="123456:ABCDEF_your_token_here"
 export TELEGRAM_ALLOWED_USER_IDS="123456789"
 
-python3 telegram_inbox.py
+python3 examples/telegram_inbox.py
 ```
 
 Optional:
@@ -176,6 +191,23 @@ That is already the default.
 3. The bot renames the directory to `.nest/in/name/`
 4. `nestling.sh` sees the ready directory
 5. `nestling.sh` moves it to `.nest/out/name/`
+
+## Sweeping `out/`
+
+`out/` is not auto-cleaned. If items have downstream collectors, they take ownership. Otherwise prune by age:
+
+```bash
+./examples/sweep.sh         # default: remove items older than 7 days
+./examples/sweep.sh 30      # custom age in days
+```
+
+Or use `find` directly:
+
+```bash
+find .nest/out -mindepth 1 -maxdepth 1 -mtime +7 -exec rm -rf {} +
+```
+
+Sweeping is a policy choice, not a protocol rule — keep it separate from `nestling.sh`.
 
 ## Configuration
 

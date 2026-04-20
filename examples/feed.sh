@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-IN="$ROOT/.nest/in"
+IN="$PWD/.nest/in"
 mkdir -p "$IN"
 
 usage() {
