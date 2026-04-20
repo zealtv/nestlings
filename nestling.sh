@@ -7,19 +7,19 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NEST="$ROOT/.nest"
 IN="$NEST/in"
 OUT="$NEST/out"
-UNHATCHED="$NEST/unhatched"
+DROPPED="$NEST/dropped"
 
-mkdir -p "$IN" "$OUT" "$UNHATCHED"
+mkdir -p "$IN" "$OUT" "$DROPPED"
 
 say() {
   printf '%s nestling: %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >&2
 }
 
-unhatch() {
+drop() {
   local src="$1" name="$2" reason="$3"
-  mv "$src" "$UNHATCHED/$name" 2>/dev/null || true
-  printf '# %s\n\n%s\n' "$name" "$reason" > "$UNHATCHED/$name.reason.md"
-  say "unhatched $name: $reason"
+  mv "$src" "$DROPPED/$name" 2>/dev/null || true
+  printf '# %s\n\n%s\n' "$name" "$reason" > "$DROPPED/$name.reason.md"
+  say "dropped $name: $reason"
 }
 
 tend() {
@@ -31,19 +31,19 @@ tend() {
   final="$OUT/$name"
 
   if [ -e "$final" ] || [ -e "$hatching" ]; then
-    unhatch "$src" "$name" "out/$name already exists"
+    drop "$src" "$name" "out/$name already exists"
     return
   fi
 
   mv "$src" "$claim" 2>/dev/null || return
 
   if ! mv "$claim" "$hatching"; then
-    unhatch "$claim" "$name" "could not stage in out/"
+    drop "$claim" "$name" "could not stage in out/"
     return
   fi
 
   if ! mv "$hatching" "$final"; then
-    unhatch "$hatching" "$name" "could not finalize in out/"
+    drop "$hatching" "$name" "could not finalize in out/"
     return
   fi
 }

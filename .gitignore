@@ -7,5 +7,5 @@ __pycache__/
 !/.nest/in/.gitkeep
 /.nest/out/*
 !/.nest/out/.gitkeep
-/.nest/unhatched/*
-!/.nest/unhatched/.gitkeep
+/.nest/dropped/*
+!/.nest/dropped/.gitkeep
