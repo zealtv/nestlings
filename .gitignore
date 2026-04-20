@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+CLAUDE.md
 
 /.nest/in/*
 !/.nest/in/.gitkeep
