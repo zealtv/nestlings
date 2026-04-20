@@ -123,41 +123,23 @@ You can also provide a name:
 
 If the destination name already exists, `examples/feed.sh` fails immediately.
 
-## Instruction items
+## tend.md
 
-An optional `instructions.md` may describe how a nestling should tend the nest. This is a convention, not a new required protocol rule.
+An optional `tend.md` describes what to do with items in a nest (or inside an item directory). It is a convention, not a protocol rule.
 
-Why it helps:
+Whoever tends — human, AI agent, or script — reads it and acts on it.
 
-- humans can read the instructions directly
-- AI agents can inspect the directory and act on it
-- scripts can treat the file as the description of the process to execute
-
-A simple pattern for `instructions.md` is:
+Minimum template:
 
 ```md
-This item contains instructions for whoever tends this nest.
+# Goal
 
-- If you are a human, follow the steps below.
-- If you are an AI agent, inspect this directory and carry out the steps.
-- If you are a script, this file describes the process to execute.
 
-## Goal
+# Steps
 
-...
-
-## Inputs
-
-...
-
-## Steps
-
-...
-
-## Outputs
-
-...
 ```
+
+Add `# Inputs`, `# Outputs`, or `# Notes` only if the task needs them.
 
 
 ## Telegram inbox bot
