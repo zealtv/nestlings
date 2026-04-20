@@ -14,7 +14,7 @@ A tiny, file-based protocol for agents that tend a folder.
                      tend      hatch       drop
 ```
 
-Three bins, three verbs. Anyone — a script, an AI, a human — can tend, hatch, or drop.
+Anyone — a script, an AI, a human — can tend, hatch, or drop.
 
 ## Install
 
@@ -37,19 +37,13 @@ That is the whole install. There is no package, no manifest, no scaffolder.
 
 ## Terminology
 
-Three things:
-
 - **nest** — a `.nest/` folder at the root of a project.
 - **nestling** — anything that acts on the nest: a script, an AI, or a human.
 - **item** — a file or directory that flows through the nest.
 
-Three actions:
-
 - **tend** — pick up a ready item from `in/`.
 - **hatch** — place a tended item in `out/`.
 - **drop** — place a failed item in `dropped/`, with a `.reason.md` sibling.
-
-Three suffixes:
 
 - **`.hatching`** — being written; off limits.
 - **`.tending`** — claimed by a nestling; off limits to others.
@@ -57,7 +51,7 @@ Three suffixes:
 
 ## The protocol
 
-A nest is a `.nest/` folder with three children:
+A nest is a `.nest/` folder:
 
 ```text
 .nest/
@@ -67,8 +61,6 @@ A nest is a `.nest/` folder with three children:
 ```
 
 An item can be a single **file** (e.g. `note.txt`) or a whole **directory** (e.g. `inbox-msg-42/`). In the rules below, `<item>` stands in for its name.
-
-Three rules:
 
 1. **Hatching write protection** — write as `<item>.hatching`, rename to `<item>` when complete. Never tend anything ending in `.hatching` or `.tending`.
 2. **Claim, tend, place** — to tend an item, rename `<item>` → `<item>.tending` inside `.nest/in/`. Place the result in `.nest/out/` using the same hatching protection on the way in.
@@ -83,8 +75,6 @@ The file system is the protocol. No network, no database, no queue, no dependenc
 .nest/out/        <item>.hatching  →  <item>
 .nest/dropped/    <item>           +  <item>.reason.md
 ```
-
-Three locations, each with its own progression.
 
 ## Activity
 

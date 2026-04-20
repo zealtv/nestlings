@@ -10,7 +10,7 @@ Run all of them from the nest root (the directory containing `.nest/`).
 
 ## feed.sh
 
-Three ways to feed the nest:
+Feed the nest:
 
 ```bash
 ./examples/feed.sh --text "hello"          # plain text item
@@ -54,7 +54,7 @@ export TELEGRAM_ALLOWED_USER_IDS="123456789"
 python3 examples/telegram_inbox.py
 ```
 
-Three env vars:
+Env vars:
 
 - `TELEGRAM_BOT_TOKEN` — bot token.
 - `TELEGRAM_ALLOWED_USER_IDS` — comma-separated user IDs allowed to send.
