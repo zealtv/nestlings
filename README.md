@@ -43,14 +43,16 @@ A nest is a `.nest/` folder with three children:
   unhatched/  items that could not be tended, with a .reason.md sibling
 ```
 
+An item can be a single **file** (e.g. `note.txt`) or a whole **directory** (e.g. `inbox-msg-42/`). Both flow through the same lifecycle. In the rules below, `<item>` stands in for the item's name.
+
 Rules:
 
-- Write new items as `name.hatching`, then rename to `name` when complete.
+- Write new items as `<item>.hatching`, then rename to `<item>` when complete.
 - Never tend anything still ending in `.hatching` or `.tending`.
 - Nestlings watch `.nest/in/` for ready files or directories.
-- A nestling claims an item by renaming `in/name` → `in/name.tending` before processing. `mv` is atomic on a single filesystem; the rename is the claim.
-- On success, the item is removed from `in/` (typically moved to `.nest/out/` using the same hatching protection on the way in).
-- On failure, the item moves to `.nest/unhatched/name`, with a human- and agent-readable `unhatched/name.reason.md` next to it.
+- A nestling claims an item by renaming `<item>` → `<item>.tending` inside `.nest/in/` before processing. `mv` is atomic on a single filesystem; the rename is the claim.
+- On success, the item is removed from `.nest/in/` (typically moved to `.nest/out/` using the same hatching protection on the way in).
+- On failure, the item is moved to `.nest/unhatched/` with a human- and agent-readable `<item>.reason.md` sibling next to it.
 - The file system is the protocol. No network, no database, no queue, no dependencies.
 
 
@@ -58,11 +60,16 @@ A nestling may process an item, enrich it, sort it, archive it, or simply ingest
 
 ## Item states
 
-- `name.hatching` — being written. Off limits.
-- `name` — ready in `.nest/in/`.
-- `name.tending` — claimed by a nestling, in progress. Other nestlings skip it.
-- `.nest/out/name` — tended and stored.
-- `.nest/unhatched/name` — kept for inspection, alongside `name.reason.md`.
+The two axes are **where** the item lives and **what suffix** (if any) it carries. The item itself can be a file or a directory either way.
+
+| Where              | Name              | Meaning                                      |
+| ------------------ | ----------------- | -------------------------------------------- |
+| `.nest/in/`        | `<item>.hatching` | being written or copied — off limits         |
+| `.nest/in/`        | `<item>`          | ready to be tended                           |
+| `.nest/in/`        | `<item>.tending`  | claimed by a nestling — others skip it       |
+| `.nest/out/`       | `<item>.hatching` | being placed — off limits to collectors      |
+| `.nest/out/`       | `<item>`          | tended and stored                            |
+| `.nest/unhatched/` | `<item>`          | failed; see sibling `<item>.reason.md`       |
 
 ## Activity output
 
