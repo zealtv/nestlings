@@ -1,63 +1,212 @@
 #!/usr/bin/env bash
-set -u
+set -euo pipefail
 
-POLL_INTERVAL="${POLL_INTERVAL:-1}"
+usage() {
+  cat <<'USAGE'
+usage:
+  nestling.sh ensure
+  nestling.sh list
+  nestling.sh ingest <src> [name]
+  nestling.sh claim <name>
+  nestling.sh complete <name> <result-src> [out-name]
+  nestling.sh drop <name> [reason...]
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-NEST="$ROOT/.nest"
-IN="$NEST/in"
-OUT="$NEST/out"
-DROPPED="$NEST/dropped"
-
-mkdir -p "$IN" "$OUT" "$DROPPED"
-
-say() {
-  printf '%s nestling: %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >&2
+notes:
+  - this script operates on the .nest/ directory beside it
+  - root entries in .nest/in/ are ready now
+  - items can be files or directories
+  - *.hatching means being written
+  - *.tending means claimed
+USAGE
 }
 
-drop() {
-  local src="$1" name="$2" reason="$3"
-  mv "$src" "$DROPPED/$name" 2>/dev/null || true
-  printf '# %s\n\n%s\n' "$name" "$reason" > "$DROPPED/$name.reason.md"
-  say "dropped $name: $reason"
+die() {
+  echo "error: $*" >&2
+  exit 1
 }
 
-tend() {
+require_nest() {
+  local script_dir
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  NEST_DIR="$script_dir/.nest"
+  [[ -d "$NEST_DIR" ]] || die "expected .nest/ beside nestling.sh"
+  IN_DIR="$NEST_DIR/in"
+  OUT_DIR="$NEST_DIR/out"
+  DROPPED_DIR="$NEST_DIR/dropped"
+}
+
+ensure_dirs() {
+  mkdir -p "$IN_DIR" "$OUT_DIR" "$DROPPED_DIR"
+}
+
+validate_name() {
+  local name="$1"
+  [[ -n "$name" ]] || die "name cannot be empty"
+  [[ "$name" != */* ]] || die "name cannot contain /"
+  [[ "$name" != "." && "$name" != ".." ]] || die "invalid name '$name'"
+}
+
+is_reserved_name() {
+  local name="$1"
+  [[ "$name" == *.hatching || "$name" == *.tending ]]
+}
+
+ensure_stable_name() {
+  local name="$1"
+  validate_name "$name"
+  is_reserved_name "$name" && die "name '$name' must not end with .hatching or .tending"
+}
+
+stage_and_finalize() {
   local src="$1"
-  local name claim hatching final
-  name="$(basename "$src")"
-  claim="$IN/$name.tending"
-  hatching="$OUT/$name.hatching"
-  final="$OUT/$name"
+  local dest_dir="$2"
+  local name="$3"
+  local tmp="$dest_dir/$name.hatching"
+  local final="$dest_dir/$name"
 
-  if [ -e "$final" ] || [ -e "$hatching" ]; then
-    drop "$src" "$name" "out/$name already exists"
-    return
+  [[ -e "$src" ]] || die "source not found: $src"
+  [[ ! -e "$tmp" ]] || die "temporary path already exists: $tmp"
+  [[ ! -e "$final" ]] || die "destination already exists: $final"
+
+  if [[ -d "$src" ]]; then
+    cp -R -- "$src" "$tmp"
+  else
+    cp -- "$src" "$tmp"
   fi
 
-  mv "$src" "$claim" 2>/dev/null || return
-
-  if ! mv "$claim" "$hatching"; then
-    drop "$claim" "$name" "could not stage in out/"
-    return
-  fi
-
-  if ! mv "$hatching" "$final"; then
-    drop "$hatching" "$name" "could not finalize in out/"
-    return
-  fi
+  mv -- "$tmp" "$final"
+  printf '%s\n' "$final"
 }
 
-say "tending $NEST (POLL_INTERVAL=$POLL_INTERVAL)"
+claimed_path() {
+  local name="$1"
+  printf '%s/%s.tending\n' "$IN_DIR" "$name"
+}
 
-while true; do
-  for src in "$IN"/*; do
-    [ -e "$src" ] || continue
-    case "$src" in
-      *.hatching) continue;;
-      *.tending) continue;;
-    esac
-    tend "$src"
+cmd_ensure() {
+  require_nest
+  ensure_dirs
+}
+
+cmd_list() {
+  require_nest
+  ensure_dirs
+
+  local path base
+  for path in "$IN_DIR"/*; do
+    [[ -e "$path" ]] || continue
+    base="$(basename "$path")"
+    is_reserved_name "$base" && continue
+    printf '%s\n' "$base"
   done
-  sleep "$POLL_INTERVAL"
-done
+}
+
+cmd_ingest() {
+  require_nest
+  ensure_dirs
+
+  local src="${1:-}"
+  local name="${2:-}"
+
+  [[ -n "$src" ]] || die "ingest requires <src>"
+  [[ -e "$src" ]] || die "source not found: $src"
+
+  if [[ -z "$name" ]]; then
+    name="$(basename "$src")"
+  fi
+
+  ensure_stable_name "$name"
+  stage_and_finalize "$src" "$IN_DIR" "$name"
+}
+
+cmd_claim() {
+  require_nest
+  ensure_dirs
+
+  local name="${1:-}"
+  [[ -n "$name" ]] || die "claim requires <name>"
+  ensure_stable_name "$name"
+
+  local src="$IN_DIR/$name"
+  local dst
+  dst="$(claimed_path "$name")"
+
+  [[ -e "$src" ]] || die "item not found: $src"
+  [[ ! -e "$dst" ]] || die "claimed path already exists: $dst"
+
+  mv -- "$src" "$dst"
+  printf '%s\n' "$dst"
+}
+
+cmd_complete() {
+  require_nest
+  ensure_dirs
+
+  local name="${1:-}"
+  local result_src="${2:-}"
+  local out_name="${3:-$name}"
+  local claimed
+
+  [[ -n "$name" ]] || die "complete requires <name>"
+  [[ -n "$result_src" ]] || die "complete requires <result-src>"
+  ensure_stable_name "$name"
+  ensure_stable_name "$out_name"
+  [[ -e "$result_src" ]] || die "result source not found: $result_src"
+
+  claimed="$(claimed_path "$name")"
+  [[ -e "$claimed" ]] || die "claimed item not found: $claimed"
+
+  stage_and_finalize "$result_src" "$OUT_DIR" "$out_name" >/dev/null
+  rm -rf -- "$claimed"
+  printf '%s\n' "$OUT_DIR/$out_name"
+}
+
+cmd_drop() {
+  require_nest
+  ensure_dirs
+
+  local name="${1:-}"
+  shift || true
+  ensure_stable_name "$name"
+
+  local claimed dropped reason_file reason
+  claimed="$(claimed_path "$name")"
+  dropped="$DROPPED_DIR/$name"
+  reason_file="$DROPPED_DIR/$name.reason.md"
+
+  [[ -e "$claimed" ]] || die "claimed item not found: $claimed"
+  [[ ! -e "$dropped" ]] || die "destination already exists: $dropped"
+  [[ ! -e "$reason_file" ]] || die "reason file already exists: $reason_file"
+
+  mv -- "$claimed" "$dropped"
+
+  if (( $# > 0 )); then
+    reason="$*"
+  else
+    reason="Add the reason here."
+  fi
+
+  {
+    echo "# why $name was dropped"
+    echo
+    printf '%s\n' "$reason"
+  } > "$reason_file"
+
+  printf '%s\n' "$dropped"
+}
+
+main() {
+  local cmd="${1:-}"
+  case "$cmd" in
+    ensure) shift; cmd_ensure "$@" ;;
+    list) shift; cmd_list "$@" ;;
+    ingest) shift; cmd_ingest "$@" ;;
+    claim) shift; cmd_claim "$@" ;;
+    complete) shift; cmd_complete "$@" ;;
+    drop) shift; cmd_drop "$@" ;;
+    -h|--help|help|"") usage ;;
+    *) die "unknown command '$cmd'" ;;
+  esac
+}
+
+main "$@"
