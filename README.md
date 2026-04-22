@@ -1,4 +1,4 @@
-# nestlings
+# 🪺 nestlings
 
 A tiny, file-based protocol for tending items of work.
 
