@@ -6,18 +6,31 @@ One script. One folder convention.
 
 When you open `.nest/in/`, you are looking at the work that is ready now.
 
-```text
+```
 .nest/
   in/
   out/
   dropped/
 ```
 
+## What a nest is for
+
+A nest makes a folder into an active process.
+
+Items arrive in `in/`. A tender works through them. Tended items land in `out/`. Dropped items land in `dropped/` with a reason.
+
+This is useful in two ways:
+
+* **As a work tray.** Someone leaves work for the tender. The tender does it. The originator collects the result from `out/`.
+* **As an autonomous process.** The folder just runs. Items arrive, get tended, and `out/` accumulates as a record of what happened.
+
+Both uses share the same mechanics. Passing items from `in/` to `out/` or `dropped/` is free logging: you can look at `out/` to see what has been actioned.
+
 ## How nestlings works
 
 An item can be a file or a directory.
 
-```text
+```
 .nest/
   in/
     item/
@@ -25,11 +38,11 @@ An item can be a file or a directory.
   dropped/
 ```
 
-- items arrive in `in/`
-- tended items are placed in `out/`
-- failed items are placed in `dropped/`
-- `.tending` means claimed
-- `.hatching` means being written
+* items arrive in `in/`
+* tended items are placed in `out/`
+* failed items are placed in `dropped/`
+* `.tending` means claimed
+* `.hatching` means being written
 
 ## Rules
 
@@ -49,10 +62,17 @@ The file system is the protocol.
 4. Read `tend.md` if present
 5. Work
 6. Either:
-   - place the result in `.nest/out/` using `.hatching`
-   - or move the item to `.nest/dropped/` and write a reason file
+   * place the result in `.nest/out/` using `.hatching`
+   * or move the item to `.nest/dropped/` and write a reason file
 
 Never touch anything ending in `.hatching` or `.tending`.
+
+## Communicating between nests
+
+When two agents talk through nests, replies go to the other agent's `in/`, not your own `out/`.
+
+Your `out/` is where you put items you have tended.
+Their `in/` is where you put items for them to tend.
 
 ## tend.md
 
@@ -64,11 +84,11 @@ Keep it short. Keep it concrete.
 
 ## Commands
 
-```text
+```
 ./nestling.sh ensure
 ./nestling.sh list
 ./nestling.sh ingest <src> [name]
-./nestling.sh claim <name>
-./nestling.sh complete <name> <result_src> [out_name]
-./nestling.sh drop <name> <reason>
+./nestling.sh claim <n>
+./nestling.sh complete <n> <result_src> [out_name]
+./nestling.sh drop <n> <reason>
 ```
