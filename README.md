@@ -11,6 +11,7 @@ When you open `.nest/in/`, you are looking at the work that is ready now.
   in/
   out/
   dropped/
+  tend.md
 ```
 
 ## What a nest is for
@@ -59,7 +60,7 @@ The file system is the protocol.
 1. Look at `.nest/in/`
 2. Pick one ready item
 3. Claim it by renaming it with `.tending`
-4. Read `tend.md` if present
+4. Read `.nest/tend.md` if present
 5. Work
 6. Either:
    * place the result in `.nest/out/` using `.hatching`
@@ -76,7 +77,7 @@ Their `in/` is where you put items for them to tend.
 
 ## tend.md
 
-`tend.md` is an optional conventional file that tells a human or agent what to do with items in the nest.
+`.nest/tend.md` is an optional conventional file that tells a human or agent what to do with items in the nest.
 
 If present, read it before tending.
 
