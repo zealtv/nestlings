@@ -17,11 +17,11 @@ When you open `.nest/in/`, you are looking at the work that is ready now.
 
 A nest makes a folder into an active process.
 
-Items arrive in `in/`. A tender works through them. Tended items land in `out/`. Dropped items land in `dropped/` with a reason.
+Items arrive in `in/`. A nestling tends to them. Tended items land in `out/`. Dropped items land in `dropped/` with a reason.
 
 This is useful in two ways:
 
-* **As a work tray.** Someone leaves work for the tender. The tender does it. The originator collects the result from `out/`.
+* **As a work tray.** Someone leaves work for the nestling. The nestling does it. The originator collects the result from `out/`.
 * **As an autonomous process.** The folder just runs. Items arrive, get tended, and `out/` accumulates as a record of what happened.
 
 Both uses share the same mechanics. Passing items from `in/` to `out/` or `dropped/` is free logging: you can look at `out/` to see what has been actioned.
