@@ -55,7 +55,9 @@ is_reserved_name() {
 ensure_stable_name() {
   local name="$1"
   validate_name "$name"
-  is_reserved_name "$name" && die "name '$name' must not end with .hatching or .tending"
+  if is_reserved_name "$name"; then
+    die "name '$name' must not end with .hatching or .tending"
+  fi
 }
 
 stage_and_finalize() {
