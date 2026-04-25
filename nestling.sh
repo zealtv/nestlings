@@ -10,6 +10,7 @@ usage:
   nestling.sh claim <name>
   nestling.sh complete <name> <result-src> [out-name]
   nestling.sh drop <name> [reason...]
+  nestling.sh sweep [days]
 
 notes:
   - this script operates on the .nest/ directory beside it
@@ -195,6 +196,31 @@ cmd_drop() {
   printf '%s\n' "$dropped"
 }
 
+sweep_dir() {
+  local dir="$1" kind="$2" days="$3"
+  [[ -d "$dir" ]] || return 0
+  local entry name
+  while IFS= read -r entry; do
+    [[ -n "$entry" ]] || continue
+    name="$(basename "$entry")"
+    rm -rf -- "$entry"
+    if [[ "$kind" == "dropped" && -e "$dir/$name.reason.md" ]]; then
+      rm -f -- "$dir/$name.reason.md"
+    fi
+    printf 'swept %s %s\n' "$kind" "$name"
+  done < <(find "$dir" -mindepth 1 -maxdepth 1 -mtime +"$days" \
+             ! -name '*.reason.md' | sort)
+}
+
+cmd_sweep() {
+  require_nest
+  ensure_dirs
+  local days="${1:-14}"
+  [[ "$days" =~ ^[0-9]+$ ]] || die "sweep <days> must be a non-negative integer"
+  sweep_dir "$OUT_DIR" out "$days"
+  sweep_dir "$DROPPED_DIR" dropped "$days"
+}
+
 main() {
   local cmd="${1:-}"
   case "$cmd" in
@@ -204,6 +230,7 @@ main() {
     claim) shift; cmd_claim "$@" ;;
     complete) shift; cmd_complete "$@" ;;
     drop) shift; cmd_drop "$@" ;;
+    sweep) shift; cmd_sweep "$@" ;;
     -h|--help|help|"") usage ;;
     *) die "unknown command '$cmd'" ;;
   esac

@@ -92,4 +92,5 @@ Keep it short. Keep it concrete.
 ./nestling.sh claim <n>
 ./nestling.sh complete <n> <result_src> [out_name]
 ./nestling.sh drop <n> <reason>
+./nestling.sh sweep [days]   # remove out/dropped older than N days (default 14); prints one line per item
 ```
