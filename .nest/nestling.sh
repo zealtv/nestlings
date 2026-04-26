@@ -16,7 +16,7 @@ notes:
   - this script operates on the .nest/ directory beside it
   - root entries in .nest/in/ are ready now
   - items can be files or directories
-  - *.hatching means being written
+  - *.landing means being written
   - *.tending means claimed
 USAGE
 }
@@ -49,14 +49,14 @@ validate_name() {
 
 is_reserved_name() {
   local name="$1"
-  [[ "$name" == *.hatching || "$name" == *.tending ]]
+  [[ "$name" == *.landing || "$name" == *.tending ]]
 }
 
 ensure_stable_name() {
   local name="$1"
   validate_name "$name"
   if is_reserved_name "$name"; then
-    die "name '$name' must not end with .hatching or .tending"
+    die "name '$name' must not end with .landing or .tending"
   fi
 }
 
@@ -64,7 +64,7 @@ stage_and_finalize() {
   local src="$1"
   local dest_dir="$2"
   local name="$3"
-  local tmp="$dest_dir/$name.hatching"
+  local tmp="$dest_dir/$name.landing"
   local final="$dest_dir/$name"
 
   [[ -e "$src" ]] || die "source not found: $src"

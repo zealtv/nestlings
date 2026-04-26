@@ -44,11 +44,11 @@ An item can be a file or a directory.
 * tended items are placed in `out/`
 * failed items are placed in `dropped/`
 * `.tending` means claimed
-* `.hatching` means being written
+* `.landing` means being written
 
 ## Rules
 
-1. Write protection: write as `<item>.hatching`, then rename to `<item>` when complete.
+1. Write protection: write as `<item>.landing`, then rename to `<item>` when complete.
 2. Claim by suffix: `<item>` → `<item>.tending`
 3. Tend from `in/`
 4. Hatch to `out/`
@@ -64,10 +64,10 @@ The file system is the protocol.
 4. Read `.nest/tend.md` if present
 5. Work
 6. Either:
-   * place the result in `.nest/out/` using `.hatching`
+   * place the result in `.nest/out/` using `.landing`
    * or move the item to `.nest/dropped/` and write a reason file
 
-Never touch anything ending in `.hatching` or `.tending`.
+Never touch anything ending in `.landing` or `.tending`.
 
 ## Communicating between nests
 

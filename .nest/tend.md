@@ -33,7 +33,7 @@ fully opaque and judged item-by-item, say so.
 The decision procedure. The most important section. Walk through it as
 a checklist; the answer to each question routes the item.
 
-1. Is the item ready (no `.tending` or `.hatching` suffix)?
+1. Is the item ready (no `.tending` or `.landing` suffix)?
 2. Is its shape recognised? If not, → drop.
 3. Can the work be completed in this tend cycle? If yes, do it.
 4. Otherwise → drop with reason, or escalate.
