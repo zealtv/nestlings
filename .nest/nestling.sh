@@ -29,8 +29,8 @@ die() {
 require_nest() {
   local script_dir
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  NEST_DIR="$script_dir/.nest"
-  [[ -d "$NEST_DIR" ]] || die "expected .nest/ beside nestling.sh"
+  [[ "$(basename "$script_dir")" == ".nest" ]] || die "nestling.sh must live inside a .nest/ directory"
+  NEST_DIR="$script_dir"
   IN_DIR="$NEST_DIR/in"
   OUT_DIR="$NEST_DIR/out"
   DROPPED_DIR="$NEST_DIR/dropped"

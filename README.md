@@ -8,6 +8,7 @@ When you open `.nest/in/`, you are looking at the work that is ready now.
 
 ```
 .nest/
+  nestling.sh
   in/
   out/
   dropped/
