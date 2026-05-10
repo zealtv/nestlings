@@ -202,6 +202,13 @@ sweep_dir() {
   local dir="$1" kind="$2" days="$3"
   [[ -d "$dir" ]] || return 0
   local entry name
+  local find_args=(-mindepth 1 -maxdepth 1)
+  # `sweep 0` matches everything regardless of mtime. find treats `-mtime +0`
+  # as "modified more than 0 days ago" → always false on freshly touched
+  # items, so the flag has to be elided to mean "right now".
+  if [[ "$days" != "0" ]]; then
+    find_args+=(-mtime +"$days")
+  fi
   while IFS= read -r entry; do
     [[ -n "$entry" ]] || continue
     name="$(basename "$entry")"
@@ -210,8 +217,7 @@ sweep_dir() {
       rm -f -- "$dir/$name.reason.md"
     fi
     printf 'swept %s %s\n' "$kind" "$name"
-  done < <(find "$dir" -mindepth 1 -maxdepth 1 -mtime +"$days" \
-             ! -name '*.reason.md' | sort)
+  done < <(find "$dir" "${find_args[@]}" ! -name '.gitkeep' ! -name '*.reason.md' | sort)
 }
 
 cmd_sweep() {
