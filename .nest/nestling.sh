@@ -10,6 +10,8 @@ usage:
   nestling.sh claim <name>
   nestling.sh complete <name> <result-src> [out-name]
   nestling.sh drop <name> [reason...]
+  nestling.sh stale [max-age-mins]
+  nestling.sh resolve <name> [reason...]
   nestling.sh sweep [days]
 
 notes:
@@ -18,6 +20,8 @@ notes:
   - items can be files or directories
   - *.landing means being written
   - *.tending means claimed
+  - stale only reports old claims; it never resolves them
+  - resolve retries marked directories up to NEST_MAX_ATTEMPTS (default 3)
 USAGE
 }
 
@@ -84,6 +88,70 @@ stage_and_finalize() {
 claimed_path() {
   local name="$1"
   printf '%s/%s.tending\n' "$IN_DIR" "$name"
+}
+
+mtime_epoch() {
+  stat -c %Y -- "$1" 2>/dev/null || stat -f %m -- "$1" 2>/dev/null
+}
+
+max_attempts() {
+  local value="${NEST_MAX_ATTEMPTS:-3}"
+  [[ "$value" =~ ^[0-9]+$ ]] || die "NEST_MAX_ATTEMPTS must be a non-negative integer"
+  printf '%d\n' "$((10#$value))"
+}
+
+item_attempts() {
+  local claimed="$1" value
+  if [[ ! -f "$claimed/.attempts" ]]; then
+    printf '0\n'
+    return
+  fi
+
+  value="$(tr -d '[:space:]' < "$claimed/.attempts")"
+  [[ "$value" =~ ^[0-9]+$ ]] || die ".attempts must contain a non-negative integer: $claimed/.attempts"
+  printf '%d\n' "$((10#$value))"
+}
+
+drop_destination() {
+  local name="$1" candidate timestamp suffix=2
+  candidate="$name"
+  if [[ ! -e "$DROPPED_DIR/$candidate" && ! -e "$DROPPED_DIR/$candidate.reason.md" ]]; then
+    printf '%s\n' "$candidate"
+    return
+  fi
+
+  timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  candidate="$name.$timestamp"
+  while [[ -e "$DROPPED_DIR/$candidate" || -e "$DROPPED_DIR/$candidate.reason.md" ]]; do
+    candidate="$name.$timestamp.$suffix"
+    suffix=$((suffix + 1))
+  done
+  printf '%s\n' "$candidate"
+}
+
+drop_claimed() {
+  local name="$1"
+  shift
+  local claimed dropped_name dropped reason_file reason
+  claimed="$(claimed_path "$name")"
+  [[ -e "$claimed" ]] || die "claimed item not found: $claimed"
+
+  dropped_name="$(drop_destination "$name")"
+  dropped="$DROPPED_DIR/$dropped_name"
+  reason_file="$DROPPED_DIR/$dropped_name.reason.md"
+  if (( $# > 0 )); then
+    reason="$*"
+  else
+    reason="Add the reason here."
+  fi
+
+  mv -- "$claimed" "$dropped"
+  {
+    echo "# why $name was dropped"
+    echo
+    printf '%s\n' "$reason"
+  } > "$reason_file"
+  printf '%s\n' "$dropped"
 }
 
 cmd_ensure() {
@@ -172,30 +240,75 @@ cmd_drop() {
   shift || true
   ensure_stable_name "$name"
 
-  local claimed dropped reason_file reason
+  drop_claimed "$name" "$@"
+}
+
+cmd_stale() {
+  require_nest
+  ensure_dirs
+
+  local max_age_mins="${1:-10}"
+  [[ "$max_age_mins" =~ ^[0-9]+$ ]] || die "stale <max-age-mins> must be a non-negative integer"
+  (( $# <= 1 )) || die "stale accepts at most one argument"
+
+  local now cutoff path base mtime age
+  now="$(date +%s)"
+  cutoff=$((max_age_mins * 60))
+  for path in "$IN_DIR"/*.tending; do
+    [[ -e "$path" ]] || continue
+    mtime="$(mtime_epoch "$path")" || die "cannot read mtime: $path"
+    age=$((now - mtime))
+    (( age >= cutoff )) || continue
+    base="$(basename "$path")"
+    printf '%s\n' "${base%.tending}"
+  done
+}
+
+cmd_resolve() {
+  require_nest
+  ensure_dirs
+
+  local name="${1:-}"
+  shift || true
+  ensure_stable_name "$name"
+
+  local claimed attempts limit reason next ready now why
   claimed="$(claimed_path "$name")"
-  dropped="$DROPPED_DIR/$name"
-  reason_file="$DROPPED_DIR/$name.reason.md"
-
   [[ -e "$claimed" ]] || die "claimed item not found: $claimed"
-  [[ ! -e "$dropped" ]] || die "destination already exists: $dropped"
-  [[ ! -e "$reason_file" ]] || die "reason file already exists: $reason_file"
+  limit="$(max_attempts)"
+  reason="${*:-unspecified}"
 
-  mv -- "$claimed" "$dropped"
-
-  if (( $# > 0 )); then
-    reason="$*"
+  if [[ -d "$claimed" ]]; then
+    attempts="$(item_attempts "$claimed")"
   else
-    reason="Add the reason here."
+    attempts=0
   fi
 
-  {
-    echo "# why $name was dropped"
-    echo
-    printf '%s\n' "$reason"
-  } > "$reason_file"
+  if [[ -d "$claimed" && -f "$claimed/.recoverable" && "$attempts" -lt "$limit" ]]; then
+    ready="$IN_DIR/$name"
+    [[ ! -e "$ready" ]] || die "cannot retry, ready path exists: $ready"
+    next=$((attempts + 1))
+    now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf '%s\n' "$next" > "$claimed/.attempts"
+    {
+      echo "# recovery"
+      echo
+      printf -- '- time: %s\n' "$now"
+      printf -- '- attempt: %d/%d\n' "$next" "$limit"
+      printf -- '- reason: %s\n' "$reason"
+    } > "$claimed/.recovery.md"
+    mv -- "$claimed" "$ready"
+    printf 're-queued %s (attempt %d/%d)\n' "$name" "$next" "$limit"
+    return
+  fi
 
-  printf '%s\n' "$dropped"
+  if [[ -d "$claimed" && -f "$claimed/.recoverable" ]]; then
+    why="$reason; recovery attempts exhausted ($attempts/$limit)"
+  else
+    why="$reason; item is not recoverable"
+  fi
+  drop_claimed "$name" "$why" >/dev/null
+  printf 'dropped %s\n' "$name"
 }
 
 sweep_dir() {
@@ -238,6 +351,8 @@ main() {
     claim) shift; cmd_claim "$@" ;;
     complete) shift; cmd_complete "$@" ;;
     drop) shift; cmd_drop "$@" ;;
+    stale) shift; cmd_stale "$@" ;;
+    resolve) shift; cmd_resolve "$@" ;;
     sweep) shift; cmd_sweep "$@" ;;
     -h|--help|help|"") usage ;;
     *) die "unknown command '$cmd'" ;;
