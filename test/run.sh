@@ -33,6 +33,26 @@ claim_file() {
   "$NESTLING" claim "$name" >/dev/null
 }
 
+install_racing_mv() {
+  local match="$1"
+  mkdir -p "$TMP/bin"
+  rm -f "$TMP/raced"
+  command -v mv > "$TMP/real-mv"
+  cat > "$TMP/bin/mv" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+real_mv="$(<"$RACE_ROOT/real-mv")"
+dst="${@: -1}"
+if [[ "$dst" == "$RACE_MATCH" && ! -e "$RACE_ROOT/raced" ]]; then
+  touch "$RACE_ROOT/raced"
+  mkdir -p "$dst"
+fi
+exec "$real_mv" "$@"
+EOF
+  chmod +x "$TMP/bin/mv"
+  export PATH="$TMP/bin:$PATH" RACE_ROOT="$TMP" RACE_MATCH="$match"
+}
+
 # Existing lifecycle remains intact.
 new_nest lifecycle
 printf 'one\n' > "$TMP/source"
@@ -97,7 +117,38 @@ if "$NESTLING" resolve collision failed > /dev/null 2>&1; then fail "resolve ign
 assert_exists "$NEST/in/collision.tending"
 assert_absent "$NEST/in/collision.tending/.attempts"
 
+# A producer winning the ready-name race cannot absorb or replace the claim.
+claim_dir raced
+touch "$NEST/in/raced.tending/.recoverable"
+printf '1\n' > "$NEST/in/raced.tending/.attempts"
+printf 'prior recovery\n' > "$NEST/in/raced.tending/.recovery.md"
+install_racing_mv "$NEST/in/raced"
+if NEST_MAX_ATTEMPTS=3 "$NESTLING" resolve raced failed > /dev/null 2>&1; then fail "resolve ignored concurrent ready collision"; fi
+assert_exists "$NEST/in/raced"
+assert_exists "$NEST/in/raced.tending"
+assert_absent "$NEST/in/raced/raced.tending"
+assert_eq "$(<"$NEST/in/raced.tending/.attempts")" 1
+assert_eq "$(<"$NEST/in/raced.tending/.recovery.md")" "prior recovery"
+PATH="${PATH#*:}"
+unset RACE_ROOT RACE_MATCH
+
+# Embedded whitespace is malformed rather than being joined into a new count.
+claim_dir spaced-attempts
+touch "$NEST/in/spaced-attempts.tending/.recoverable"
+printf '1 2\n' > "$NEST/in/spaced-attempts.tending/.attempts"
+if "$NESTLING" resolve spaced-attempts failed > /dev/null 2>&1; then fail "resolve accepted spaced attempts"; fi
+assert_exists "$NEST/in/spaced-attempts.tending"
+
 # Ordinary and recovery drops keep every same-named history and reason.
+new_nest drop-race
+claim_file concurrent-drop
+install_racing_mv "$NEST/dropped/concurrent-drop"
+"$NESTLING" drop concurrent-drop raced >/dev/null
+assert_exists "$NEST/dropped/concurrent-drop"
+assert_eq "$(find "$NEST/dropped" -mindepth 1 -maxdepth 1 -name 'concurrent-drop.*' ! -name '*.reason.md' | wc -l | tr -d ' ')" 1
+PATH="${PATH#*:}"
+unset RACE_ROOT RACE_MATCH
+
 new_nest collisions
 for reason in first second third; do
   claim_file duplicate

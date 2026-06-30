@@ -107,9 +107,17 @@ item_attempts() {
     return
   fi
 
-  value="$(tr -d '[:space:]' < "$claimed/.attempts")"
-  [[ "$value" =~ ^[0-9]+$ ]] || die ".attempts must contain a non-negative integer: $claimed/.attempts"
-  printf '%d\n' "$((10#$value))"
+  value="$(<"$claimed/.attempts")"
+  [[ "$value" =~ ^[[:space:]]*([0-9]+)[[:space:]]*$ ]] || die ".attempts must contain a non-negative integer: $claimed/.attempts"
+  printf '%d\n' "$((10#${BASH_REMATCH[1]}))"
+}
+
+move_no_replace() {
+  local src="$1" dst="$2"
+
+  # `-T` prevents a directory source from being nested inside a destination
+  # created after the caller's collision check; `-n` prevents replacement.
+  mv -nT -- "$src" "$dst"
 }
 
 drop_destination() {
@@ -136,16 +144,18 @@ drop_claimed() {
   claimed="$(claimed_path "$name")"
   [[ -e "$claimed" ]] || die "claimed item not found: $claimed"
 
-  dropped_name="$(drop_destination "$name")"
-  dropped="$DROPPED_DIR/$dropped_name"
-  reason_file="$DROPPED_DIR/$dropped_name.reason.md"
   if (( $# > 0 )); then
     reason="$*"
   else
     reason="Add the reason here."
   fi
 
-  mv -- "$claimed" "$dropped"
+  while :; do
+    dropped_name="$(drop_destination "$name")"
+    dropped="$DROPPED_DIR/$dropped_name"
+    reason_file="$DROPPED_DIR/$dropped_name.reason.md"
+    move_no_replace "$claimed" "$dropped" 2>/dev/null && break
+  done
   {
     echo "# why $name was dropped"
     echo
@@ -272,7 +282,7 @@ cmd_resolve() {
   shift || true
   ensure_stable_name "$name"
 
-  local claimed attempts limit reason next ready now why
+  local claimed attempts limit reason next ready now why backup
   claimed="$(claimed_path "$name")"
   [[ -e "$claimed" ]] || die "claimed item not found: $claimed"
   limit="$(max_attempts)"
@@ -287,6 +297,9 @@ cmd_resolve() {
   if [[ -d "$claimed" && -f "$claimed/.recoverable" && "$attempts" -lt "$limit" ]]; then
     ready="$IN_DIR/$name"
     [[ ! -e "$ready" ]] || die "cannot retry, ready path exists: $ready"
+    backup="$(mktemp -d "${TMPDIR:-/tmp}/nestlings-resolve.XXXXXX")"
+    [[ ! -e "$claimed/.attempts" ]] || cp -p -- "$claimed/.attempts" "$backup/.attempts"
+    [[ ! -e "$claimed/.recovery.md" ]] || cp -p -- "$claimed/.recovery.md" "$backup/.recovery.md"
     next=$((attempts + 1))
     now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     printf '%s\n' "$next" > "$claimed/.attempts"
@@ -297,7 +310,21 @@ cmd_resolve() {
       printf -- '- attempt: %d/%d\n' "$next" "$limit"
       printf -- '- reason: %s\n' "$reason"
     } > "$claimed/.recovery.md"
-    mv -- "$claimed" "$ready"
+    if ! move_no_replace "$claimed" "$ready"; then
+      if [[ -e "$backup/.attempts" ]]; then
+        cp -p -- "$backup/.attempts" "$claimed/.attempts"
+      else
+        rm -f -- "$claimed/.attempts"
+      fi
+      if [[ -e "$backup/.recovery.md" ]]; then
+        cp -p -- "$backup/.recovery.md" "$claimed/.recovery.md"
+      else
+        rm -f -- "$claimed/.recovery.md"
+      fi
+      rm -rf -- "$backup"
+      die "cannot retry, ready path appeared concurrently: $ready"
+    fi
+    rm -rf -- "$backup"
     printf 're-queued %s (attempt %d/%d)\n' "$name" "$next" "$limit"
     return
   fi
