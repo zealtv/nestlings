@@ -91,7 +91,7 @@ the material went:
 ```text
 # repository established
 
-- retained the original brief at: <destination>
+- retained the original brief at: path:<repo-relative-path>
 - added: <independently installed structure or tool, or "nothing yet">
 - next material belongs in: .nest/in/
 ```
@@ -230,10 +230,18 @@ sender--review-brief--20260827/
 ```
 
 Use ordinary prose in `request.md` to name the origin repository, the inbound
-item name, the requested handling, and where a reply should be ingested. These
-details are an origin trail, not mandatory protocol metadata. Prefer a relative
-reply-nest path when the repositories move together; otherwise use a path or
-visible peer name meaningful to the tender that will send the reply.
+item name, the requested handling, and where a reply should be ingested. For
+adjacent repositories, the routing lines can use repository-relative paths:
+
+```markdown
+- origin: path:../sender
+- reply nest: path:../sender/.nest
+```
+
+These details are an origin trail, not mandatory protocol metadata. A
+`path:` reference is resolved from the root of the repository reading the note.
+When repositories do not move together, use a visible peer name or transport
+instruction meaningful to the tender that will send the reply.
 
 After tending, the receiver hatches its own result or receipt in its `out/`.
 That record stays with the receiver. A reply is a new item explicitly ingested
@@ -287,6 +295,45 @@ These are example policy decisions, not built-in destinations. Replace their
 names and ordering with the host's actual tools and conventions. Record enough
 in the hatched receipt to show what went where; keep evidence, memory, plans,
 schedules, and agent behavior in their owning systems rather than in `tend.md`.
+
+### Experimental composition references
+
+Requests and receipts may use small typed references in ordinary Markdown when
+an owning system has produced something worth finding again:
+
+```text
+glean:<finding-id>
+lore:<item-id>
+loom:<stitch-id>
+path:<repo-relative-path>
+```
+
+For example:
+
+```markdown
+- retained source: lore:2026-08-27-project-brief
+- distilled guidance: glean:prefer-bounded-batches
+- shaped work: loom:publish-first-brief
+- generated file: path:docs/brief.md
+```
+
+The prefix identifies the owner; the owner defines and resolves the ID. `path:`
+is resolved from the current repository root and can also point to a Groundhog
+schedule item when its schedule path is the useful identity. Surrounding prose
+states the relationship—created, revised, consulted, or routed—because the
+reference itself carries no graph semantics.
+
+Do not give `nest:` references to entries in `in/`, `out/`, or `dropped/`.
+Those entries are transport records and may be swept. A request or receipt can
+mention an inbound item name for correlation, but durable references should
+name the durable result in Lore, Glean, Loom, or a stable repository path.
+
+This convention remains an optional host-policy convention. Nestlings neither
+parses nor validates it, and it should not be added to Glean's finding contract:
+Glean already owns finding-local associations, while these references cross
+several systems and include operational paths. If multiple primitives later
+need to resolve the same prefixes, extract a separate family composition
+specification with those owners rather than expanding the Nestlings protocol.
 
 ## Installation
 

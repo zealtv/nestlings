@@ -28,11 +28,14 @@ assert_exists "$RECEIVER/.nest/in/partial.landing/chunk"
 
 # The sender addresses the adjacent receiving nest and passes one envelope.
 mkdir -p "$TMP/request/attachments"
-printf '# review brief\n\n- origin: %s\n- inbound item: %s\n- reply nest: %s\n' "$SENDER" "$ITEM" "$SENDER/.nest" > "$TMP/request/request.md"
+printf '# review brief\n\n- origin: path:../sender\n- inbound item: %s\n- reply nest: path:../sender/.nest\n' "$ITEM" > "$TMP/request/request.md"
 printf '# brief\n\nPlease review this.\n' > "$TMP/request/attachments/brief.md"
 "$RECEIVER/.nest/nestling.sh" ingest "$TMP/request" "$ITEM" >/dev/null
 assert_exists "$RECEIVER/.nest/in/$ITEM/request.md"
 assert_contains "$RECEIVER/.nest/in/$ITEM/request.md" "inbound item: $ITEM"
+assert_contains "$RECEIVER/.nest/in/$ITEM/request.md" "origin: path:../sender"
+assert_contains "$RECEIVER/.nest/in/$ITEM/request.md" "reply nest: path:../sender/.nest"
+(cd "$RECEIVER" && test -d ../sender/.nest) || fail "reply path does not resolve from receiver root"
 
 # A repeated name fails closed and leaves the first arrival unchanged.
 printf 'replacement\n' > "$TMP/request/attachments/brief.md"

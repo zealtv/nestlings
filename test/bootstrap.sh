@@ -37,12 +37,13 @@ printf '# initial brief\n' > "$TMP/establish-repository/attachments/brief.md"
 "$REPO/.nest/nestling.sh" claim establish-repository >/dev/null
 mkdir -p "$REPO/docs"
 cp "$REPO/.nest/in/establish-repository.tending/attachments/brief.md" "$REPO/docs/brief.md"
-printf '# repository established\n\n- retained the original brief at: docs/brief.md\n- added: nothing yet\n- next material belongs in: .nest/in/\n' > "$TMP/repository-established.md"
+printf '# repository established\n\n- retained the original brief at: path:docs/brief.md\n- added: nothing yet\n- next material belongs in: .nest/in/\n' > "$TMP/repository-established.md"
 "$REPO/.nest/nestling.sh" complete establish-repository "$TMP/repository-established.md" repository-established.md >/dev/null
 
 assert_exists "$REPO/docs/brief.md"
 assert_exists "$REPO/.nest/out/repository-established.md"
 assert_absent "$REPO/.nest/in/establish-repository.tending"
+assert_contains "$REPO/.nest/out/repository-established.md" "path:docs/brief.md"
 assert_contains "$REPO/.nest/out/repository-established.md" "added: nothing yet"
 
 echo "ok - fresh repository established from a nest"
