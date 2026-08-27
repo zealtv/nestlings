@@ -1,104 +1,47 @@
 # Tend
 
-This nest is tended by following the instructions in this file.
+Replace the prompts below with the host folder's policy. This file guides the
+person or process tending this nest; Nestlings does not enforce it.
 
-`tend.md` is the policy surface — everything the nestling protocol leaves
-to judgement lives here. The file is **not** enforced. Sections below are a
-suggested skeleton; keep what helps, remove what doesn't, add what's missing.
-
-Two rules of thumb for writing this file:
-
-* Keep it short. A page is a long tend.md.
-* Operational, not descriptive. *"For each item, do X then Y"* beats
-  *"this nest handles X-shaped work."*
-
----
+Keep only stable, operational directions needed to route an item. Link to
+project context or agent instructions instead of copying either into this file.
 
 ## Purpose
 
-One sentence on what this nest is for. *"Process incoming customer
-emails into draft replies."* *"Triage research links into summaries."*
-If the purpose can't fit in a sentence, the nest is probably trying to
-do too much — split it.
+State in one sentence what this nest receives and what tending should achieve.
 
-## Items
+## Recognise
 
-What kinds of items arrive here. Note any *shapes* that the tender
-should recognise: a directory containing a `prompt.md`, a single
-markdown file, a payload directory with a `run.sh`, etc. If items are
-fully opaque and judged item-by-item, say so.
+List accepted item shapes and where intent is found. For example:
 
-## Decide
+* a Markdown file containing both material and a request;
+* a directory with `request.md` and optional `attachments/`.
 
-The decision procedure. The most important section. Walk through it as
-a checklist; the answer to each question routes the item.
+## Route
 
-1. Is the item available (no `.tending` or `.landing` suffix)?
-2. Is this item in the batch being tended now? If not, leave it in `in/`.
-3. Claim it. Is its shape recognised? If not, → drop.
-4. Can the work be completed or handed off safely in this tend cycle?
-   If yes, do it. Otherwise → drop with reason, or escalate.
+When it is time to tend a batch:
 
-This is a template; fill in the questions that actually matter for
-this nest.
+1. Select an available item and claim it with `nestling.sh claim`.
+2. Read the whole item, including its request and referenced attachments.
+3. Take each applicable route below in the stated order.
+4. Hatch a result or receipt with `nestling.sh complete`; if no safe route can
+   be completed, use `nestling.sh drop` with a useful reason.
 
-## Act
-
-What to do for each decision branch. State output naming, intermediate
-artefacts, and where results land.
-
-* **Action items** — do the work; result file in `out/<item>/`.
-* **Escalation** — leave a one-line receipt in `out/<item>.escalated.md`
-  describing what was done and what remains.
-* **No-action** — drop with a reason file (`<item>.reason.md` in
-  `dropped/`).
-
-## Drop when
-
-Concrete drop criteria, in addition to the protocol-level ones (invalid,
-unreadable, unsafe). The reason file should help a later tender (or
-future you) understand what happened.
-
-* The required input is missing or ambiguous.
-* The action would have side effects this nest is not authorised to take.
-* The item duplicates one already tended today.
+Replace this paragraph with concrete condition → action routes. A
+single-purpose nest may need only one route. A repository-entry nest may route
+to several local tools and then hatch one receipt recording what went where.
 
 ## Hard rules
 
-Things the tender must not do regardless of judgement. This is the
-trust-boundary — the place where mistakes are expensive enough that no
-amount of cleverness should override the rule.
+List actions a tender must never take, even when an item asks. Keep expensive
+trust decisions explicit. For example:
 
-* Never send external messages (email, Slack, webhooks) without a
-  human-confirmation step.
-* Never modify state outside this nest's directory without explicit
-  permission in the item.
-* Never tend an item that already has a sibling reason file in
-  `dropped/` — surface it instead.
+* Do not send messages or change external state without the required approval.
+* Do not overwrite an existing destination.
+* Do not invent missing material or intent.
 
 ## Context
 
-Where to look for additional context the tender may need.
-
-* The item's own prose, such as a single Markdown file or `request.md` in a
-  directory envelope.
-* Sibling files inside the item directory itself, including `attachments/`.
-* The nest's `README.md` if one exists.
-* Anything referenced by name inside the item.
-
-## Working stance
-
-A short paragraph on disposition. Conservative or exploratory? Ask
-questions or assume? Default to drop, default to act, default to defer?
-This is the personality of the tender in this folder. Different nests
-can — and probably should — have different stances.
-
-Be conservative and explicit. Do not guess unnecessarily, fabricate
-missing information, overwrite meaning carelessly, or force marginal
-inputs through the workflow. Prefer dropping with a clear reason over
-producing a misleading result.
-
-## Task-specific instructions
-
-Anything that doesn't fit the structure above. Replace this section
-freely.
+Link only the sources a tender should consult, such as a project guide, current
+memory, or destination conventions. Context remains in its owning files; this
+policy says when to read it, not what it should contain.

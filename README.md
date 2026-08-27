@@ -147,6 +147,32 @@ If present, read it before tending.
 
 Keep it short. Keep it concrete.
 
+A single-purpose nest can use one route:
+
+```text
+recognised customer email -> draft a reply -> hatch the draft
+anything else             -> drop with a reason
+```
+
+A repository entrance can compose with other local tools without adding those
+tools to the Nestlings protocol. For example, after reading the whole item,
+take each applicable route in host-defined order:
+
+```text
+complete source worth retaining -> preserve it as durable evidence in Lore
+current guidance worth distilling -> update the relevant memory in Glean
+finite intention needing work -> shape a stitch in Loom
+recurring intention -> establish it in Groundhog
+material owned elsewhere -> ingest it into the receiving repository's nest
+no further route needed -> hatch a receipt or result
+unsafe, invalid, or unintelligible -> drop with a reason
+```
+
+These are example policy decisions, not built-in destinations. Replace their
+names and ordering with the host's actual tools and conventions. Record enough
+in the hatched receipt to show what went where; keep evidence, memory, plans,
+schedules, and agent behavior in their owning systems rather than in `tend.md`.
+
 ## Vendoring
 
 To add a nest to another project, copy `nestling.sh` and `README.md` into
