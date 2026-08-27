@@ -84,6 +84,9 @@ assert_exists "$NEST/in/review-source.tending/request.md"
 # Exercise the complete empty-repository path independently as well as in CI.
 bash "$ROOT/test/bootstrap.sh"
 
+# Exercise adjacent request/reply passing independently as well as in CI.
+bash "$ROOT/test/passing.sh"
+
 # stale is validated, stable, and read-only for files and directories.
 new_nest stale
 claim_file old-file

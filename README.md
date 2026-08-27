@@ -203,6 +203,56 @@ folder's `in/`, not the sending folder's `out/`.
 The sender's `out/` records what it has tended. The receiver's `in/` holds what
 it is being asked to tend.
 
+Address the receiver with an explicit path to its nest. Adjacent repositories
+need no registry:
+
+```sh
+../receiver/.nest/nestling.sh ingest ./review-brief sender--review-brief--20260827
+```
+
+`ingest` copies the file or directory as `<name>.landing` and renames it only
+after the copy finishes. It refuses an existing landing or final name rather
+than merging with or overwriting it. Choose a new unambiguous name when retrying
+a collision; a useful shape is `<origin>--<purpose>--<token>`.
+
+For a relationship used often, a host may replace the repeated path with a
+visible symlink, for example `.nest/peers/reviewer` pointing to
+`../../../reviewer/.nest`. This is optional host configuration, not shared
+Nestlings state. Anyone can inspect where it leads.
+
+Pass a request and its material as one directory envelope:
+
+```text
+sender--review-brief--20260827/
+  request.md
+  attachments/
+    brief.md
+```
+
+Use ordinary prose in `request.md` to name the origin repository, the inbound
+item name, the requested handling, and where a reply should be ingested. These
+details are an origin trail, not mandatory protocol metadata. Prefer a relative
+reply-nest path when the repositories move together; otherwise use a path or
+visible peer name meaningful to the tender that will send the reply.
+
+After tending, the receiver hatches its own result or receipt in its `out/`.
+That record stays with the receiver. A reply is a new item explicitly ingested
+into the origin repository's `in/`:
+
+```sh
+../sender/.nest/nestling.sh ingest ./reply-envelope receiver--reply--20260827
+```
+
+The reply envelope should refer to the inbound item name and may carry response
+attachments. It is not copied from the receiver's `out/` implicitly.
+
+If both repositories are not available on one machine, prepare the complete
+envelope in a transport folder first. Synchronize or carry that finished
+envelope by any agreed means, then run the receiving nest's `ingest` when it is
+locally available. Network transport and synchronization are outside the local
+protocol: never expose a partially synchronized directory as a final entry in
+`in/`, and never use one repository's `out/` as another repository's inbox.
+
 ## tend.md
 
 `.nest/tend.md` is an optional conventional file that states the folder's local
