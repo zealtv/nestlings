@@ -65,6 +65,22 @@ assert_exists "$NEST/out/item"
 "$NESTLING" sweep 0 >/dev/null
 assert_absent "$NEST/out/item"
 
+# A quick prose capture and a material-plus-note envelope can wait together.
+new_nest capture
+printf '# check release notes\n\nCompare the draft with the last tag.\n' > "$TMP/check-release-notes.md"
+mkdir -p "$TMP/review-source/attachments"
+printf '# request\n\nSummarise the attached source.\n' > "$TMP/review-source/request.md"
+printf 'source material\n' > "$TMP/review-source/attachments/source.txt"
+"$NESTLING" ingest "$TMP/check-release-notes.md" >/dev/null
+"$NESTLING" ingest "$TMP/review-source" >/dev/null
+assert_eq "$("$NESTLING" list)" $'check-release-notes.md\nreview-source'
+assert_contains "$NEST/in/check-release-notes.md" "Compare the draft"
+assert_contains "$NEST/in/review-source/request.md" "Summarise the attached source"
+assert_contains "$NEST/in/review-source/attachments/source.txt" "source material"
+"$NESTLING" claim review-source >/dev/null
+assert_exists "$NEST/in/check-release-notes.md"
+assert_exists "$NEST/in/review-source.tending/request.md"
+
 # stale is validated, stable, and read-only for files and directories.
 new_nest stale
 claim_file old-file

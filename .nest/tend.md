@@ -33,10 +33,11 @@ fully opaque and judged item-by-item, say so.
 The decision procedure. The most important section. Walk through it as
 a checklist; the answer to each question routes the item.
 
-1. Is the item ready (no `.tending` or `.landing` suffix)?
-2. Is its shape recognised? If not, → drop.
-3. Can the work be completed in this tend cycle? If yes, do it.
-4. Otherwise → drop with reason, or escalate.
+1. Is the item available (no `.tending` or `.landing` suffix)?
+2. Is this item in the batch being tended now? If not, leave it in `in/`.
+3. Claim it. Is its shape recognised? If not, → drop.
+4. Can the work be completed or handed off safely in this tend cycle?
+   If yes, do it. Otherwise → drop with reason, or escalate.
 
 This is a template; fill in the questions that actually matter for
 this nest.
@@ -79,7 +80,9 @@ amount of cleverness should override the rule.
 
 Where to look for additional context the tender may need.
 
-* Sibling files inside the item directory itself.
+* The item's own prose, such as a single Markdown file or `request.md` in a
+  directory envelope.
+* Sibling files inside the item directory itself, including `attachments/`.
 * The nest's `README.md` if one exists.
 * Anything referenced by name inside the item.
 

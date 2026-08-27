@@ -4,7 +4,8 @@ A tiny, file-based protocol for making a folder ready to receive material.
 
 One script. One folder convention.
 
-When you open `.nest/in/`, you are looking at the items ready to be tended.
+When you open `.nest/in/`, you are looking at the items available to be tended.
+They may have arrived moments ago or be waiting for the next batch.
 
 ```
 .nest/
@@ -40,6 +41,41 @@ To **tend** is to apply the folder's local policy to a claimed item. To
 `out/`. Passing items through `in/`, `out/`, and `dropped/` leaves a simple
 filesystem record of what happened.
 
+## Capture now, tend later
+
+Put a self-contained note directly in `in/` when prose is enough:
+
+```text
+.nest/in/check-release-notes.md
+```
+
+The file can hold the material, the desired handling, or both. When material
+needs to travel beside its note, use a directory envelope:
+
+```text
+.nest/in/review-source/
+  request.md
+  attachments/
+    source.txt
+```
+
+`request.md` is an ordinary note to the tender; `attachments/` is an ordinary
+directory. These names are a useful convention, not protocol metadata. A local
+`tend.md` may recognise other shapes.
+
+Use `ingest` when copying either shape into a nest so the item is staged with a
+`.landing` suffix and appears atomically under its final name:
+
+```sh
+./.nest/nestling.sh ingest check-release-notes.md
+./.nest/nestling.sh ingest review-source/
+```
+
+An item waiting in `in/` is pending and available; it is not claimed, failed,
+abandoned, or scheduled. Only `.tending` records an active claim, and only
+`dropped/` records failure or rejection. Scheduling, urgency, and batch cadence
+belong in the folder's local policy or its tender, not in the nest protocol.
+
 ## How nestlings works
 
 An item can be a file or a directory.
@@ -72,10 +108,10 @@ The file system is the protocol.
 
 ## Tending loop
 
-1. Look at `.nest/in/`
-2. Pick one ready item
-3. Claim it by renaming it with `.tending`
-4. Read `.nest/tend.md` if present
+1. Read `.nest/tend.md` if present
+2. Look at `.nest/in/` when it is time to tend one item or a batch
+3. Pick one available item
+4. Claim it by renaming it with `.tending`
 5. Apply the local policy
 6. Either:
    * hatch by placing the result in `.nest/out/` using `.landing`

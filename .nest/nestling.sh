@@ -16,7 +16,7 @@ usage:
 
 notes:
   - this script operates on the .nest/ directory beside it
-  - root entries in .nest/in/ are ready now
+  - root entries in .nest/in/ are available to tend now or in a later batch
   - items can be files or directories
   - *.landing means being written
   - *.tending means claimed
