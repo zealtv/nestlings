@@ -41,6 +41,71 @@ To **tend** is to apply the folder's local policy to a claimed item. To
 `out/`. Passing items through `in/`, `out/`, and `dropped/` leaves a simple
 filesystem record of what happened.
 
+## Start a repository with a nest
+
+Create an empty folder, enter it, then stream the installer from upstream:
+
+```sh
+mkdir my-project
+cd my-project
+curl -fsSL https://raw.githubusercontent.com/zealtv/nestlings/main/install.sh | bash
+```
+
+The folder now contains only `.nest/`. Read and tailor `.nest/tend.md`; it is
+the local routing policy and will not be overwritten by later installs.
+
+If an agent instruction file is useful, its Nestlings pointer can be one line:
+
+```markdown
+For incoming material, read `.nest/tend.md` and inspect `.nest/in/`.
+```
+
+That pointer is optional and runtime-neutral. Project guidance belongs
+elsewhere and can be added when the project has enough shape to need it.
+
+Capture an establishment request as an ordinary envelope outside the nest:
+
+```text
+establish-repository/
+  request.md
+  attachments/
+    brief.md
+```
+
+In `request.md`, state the desired outcome, which initial materials matter, and
+that only justified project structures or tools should be added. Then ingest it:
+
+```sh
+./.nest/nestling.sh ingest establish-repository/
+```
+
+When tending the request, claim and read it before deciding what the repository
+needs. Preserve or shape the initial material using the host policy. If a tool
+such as Lore, Glean, Loom, or Groundhog is justified, run that tool's own
+installer explicitly, inspect what it added, and use its own interface. The
+Nestlings installer never selects or installs sibling tools.
+
+Finish by hatching a short receipt that records what was established and where
+the material went:
+
+```text
+# repository established
+
+- retained the original brief at: <destination>
+- added: <independently installed structure or tool, or "nothing yet">
+- next material belongs in: .nest/in/
+```
+
+Pass that receipt to `complete` as the result source. It lands in `out/`, while
+the claimed establishment envelope is removed from `in/`:
+
+```sh
+./.nest/nestling.sh complete establish-repository <receipt-file> repository-established.md
+```
+
+The repository can remain a nest plus its initial material. More furniture is
+an outcome of tending, not a prerequisite for capture.
+
 ## Capture now, tend later
 
 Put a self-contained note directly in `in/` when prose is enough:
@@ -173,15 +238,31 @@ names and ordering with the host's actual tools and conventions. Record enough
 in the hatched receipt to show what went where; keep evidence, memory, plans,
 schedules, and agent behavior in their owning systems rather than in `tend.md`.
 
-## Vendoring
+## Installation
 
-To add a nest to another project, copy `nestling.sh` and `README.md` into
-the project's `.nest/` directory, then run `./.nest/nestling.sh ensure` to
-seed the trays:
+From inside the target folder, stream the upstream installer:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/zealtv/nestlings/main/install.sh | bash
+```
+
+From a local Nestlings checkout, the equivalent is:
+
+```sh
+./install.sh /path/to/host-repository
+```
+
+This installs `nestling.sh`, the protocol README, a starter `tend.md`, and the
+three trays. Re-running repairs the script and README and recreates missing
+trays, but preserves tray contents and a host-customized `tend.md`.
+
+For manual vendoring, copy `nestling.sh` and `README.md` into the project's
+`.nest/` directory, then seed the trays:
 
 ```sh
 mkdir -p <project>/.nest
-cp nestling.sh README.md <project>/.nest/
+cp /path/to/nestlings/.nest/nestling.sh <project>/.nest/
+cp /path/to/nestlings/README.md <project>/.nest/
 <project>/.nest/nestling.sh ensure
 ```
 

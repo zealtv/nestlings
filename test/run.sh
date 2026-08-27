@@ -81,6 +81,9 @@ assert_contains "$NEST/in/review-source/attachments/source.txt" "source material
 assert_exists "$NEST/in/check-release-notes.md"
 assert_exists "$NEST/in/review-source.tending/request.md"
 
+# Exercise the complete empty-repository path independently as well as in CI.
+bash "$ROOT/test/bootstrap.sh"
+
 # stale is validated, stable, and read-only for files and directories.
 new_nest stale
 claim_file old-file
