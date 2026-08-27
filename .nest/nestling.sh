@@ -113,11 +113,25 @@ item_attempts() {
 }
 
 move_no_replace() {
-  local src="$1" dst="$2"
+  local src="$1" dst="$2" mv_t_probe
 
-  # `-T` prevents a directory source from being nested inside a destination
-  # created after the caller's collision check; `-n` prevents replacement.
-  mv -nT -- "$src" "$dst"
+  # GNU mv's `-T` prevents a directory source from being nested inside a
+  # destination created after the caller's collision check. BSD mv has no -T,
+  # so detect an unexpected nested move and restore the source before failing.
+  mv_t_probe="$(mv -T 2>&1 || true)"
+  if [[ "$mv_t_probe" != *"illegal option"* && "$mv_t_probe" != *"invalid option"* ]]; then
+    mv -nT -- "$src" "$dst"
+    return
+  fi
+
+  local nested="$dst/$(basename "$src")"
+  [[ ! -e "$dst" ]] || return 1
+  mv -n -- "$src" "$dst" || return 1
+  if [[ ! -e "$src" && -e "$nested" ]]; then
+    mv -n -- "$nested" "$src" || die "cannot restore source after destination race: $src"
+    return 1
+  fi
+  [[ ! -e "$src" ]]
 }
 
 drop_destination() {

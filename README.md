@@ -373,10 +373,15 @@ vendored copy is self-contained.
 ./nestling.sh ensure
 ./nestling.sh list
 ./nestling.sh ingest <src> [name]
-./nestling.sh claim <n>
-./nestling.sh complete <n> <result_src> [out_name]
-./nestling.sh drop <n> <reason>
+./nestling.sh claim <name>
+./nestling.sh complete <name> <result-src> [out-name]
+./nestling.sh drop <name> [reason...]
 ./nestling.sh stale [max-age-mins]   # read-only; default 10
-./nestling.sh resolve <n> [reason]   # retry marked directories or drop
-./nestling.sh sweep [days]   # remove out/dropped older than N days (default 14; pass 0 to sweep everything regardless of mtime). `.gitkeep` placeholders and `*.reason.md` siblings are preserved. Prints one line per item.
+./nestling.sh resolve <name> [reason...]   # retry marked directories or drop
+./nestling.sh sweep [days]
 ```
+
+`sweep` removes `out/` and `dropped/` items older than the requested number of
+days (default 14; pass 0 to sweep everything regardless of modification time).
+It preserves `.gitkeep` placeholders and standalone `*.reason.md` files, and
+prints one line per item removed.

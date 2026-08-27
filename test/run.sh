@@ -93,9 +93,9 @@ claim_file old-file
 claim_dir old-dir
 claim_dir recent
 touch -t 200001010000 "$NEST/in/old-file.tending" "$NEST/in/old-dir.tending"
-before="$(find "$NEST/in" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort)"
+before="$(find "$NEST/in" -mindepth 1 -maxdepth 1 -exec basename {} \; | sort)"
 assert_eq "$("$NESTLING" stale 10)" $'old-dir\nold-file'
-after="$(find "$NEST/in" -mindepth 1 -maxdepth 1 -printf '%f\n' | sort)"
+after="$(find "$NEST/in" -mindepth 1 -maxdepth 1 -exec basename {} \; | sort)"
 assert_eq "$after" "$before"
 if "$NESTLING" stale nope > /dev/null 2>&1; then fail "stale accepted invalid age"; fi
 

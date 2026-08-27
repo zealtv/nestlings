@@ -20,10 +20,29 @@ mkdir -p "$REPO"
 [[ "$(find "$REPO" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')" == 1 ]] || fail "installer added more than .nest"
 assert_exists "$REPO/.nest/nestling.sh"
 assert_exists "$REPO/.nest/tend.md"
+cmp -s "$ROOT/README.md" "$REPO/.nest/README.md" || fail "installed README differs from protocol README"
 assert_absent "$REPO/.loom"
 assert_absent "$REPO/.lore"
 assert_absent "$REPO/.glean"
 assert_absent "$REPO/.groundhog"
+
+# Re-installation repairs owned payloads and trays without changing local policy
+# or material already waiting in the nest.
+printf '# host policy\n\nKeep this customization.\n' > "$REPO/.nest/tend.md"
+printf 'damaged\n' > "$REPO/.nest/README.md"
+rm -rf "$REPO/.nest/out"
+printf 'deferred\n' > "$REPO/.nest/in/deferred.md"
+"$ROOT/install.sh" "$REPO" >/dev/null
+assert_contains "$REPO/.nest/tend.md" "Keep this customization."
+cmp -s "$ROOT/README.md" "$REPO/.nest/README.md" || fail "re-install did not repair README"
+assert_exists "$REPO/.nest/out"
+assert_contains "$REPO/.nest/in/deferred.md" "deferred"
+
+# Composition examples remain documentation and host policy: the installed
+# runtime does not invoke or require any sibling primitive.
+if grep -Eiq 'loom|lore|glean|groundhog' "$REPO/.nest/nestling.sh" "$ROOT/install.sh"; then
+  fail "optional composition leaked into the runtime"
+fi
 
 # Add only the pointer and material that this establishment request justifies.
 printf 'For incoming material, read `.nest/tend.md` and inspect `.nest/in/`.\n' > "$REPO/AGENTS.md"
@@ -31,7 +50,10 @@ mkdir -p "$TMP/establish-repository/attachments"
 printf '# establish\n\nRetain the attached brief under docs; add no optional tools yet.\n' > "$TMP/establish-repository/request.md"
 printf '# initial brief\n' > "$TMP/establish-repository/attachments/brief.md"
 "$REPO/.nest/nestling.sh" ingest "$TMP/establish-repository" >/dev/null
-[[ "$("$REPO/.nest/nestling.sh" list)" == establish-repository ]] || fail "establishment request is not ready"
+[[ "$("$REPO/.nest/nestling.sh" list)" == $'deferred.md\nestablish-repository' ]] || fail "deferred items are not visible with the establishment request"
+"$REPO/.nest/nestling.sh" claim deferred.md >/dev/null
+assert_exists "$REPO/.nest/in/deferred.md.tending"
+"$REPO/.nest/nestling.sh" drop deferred.md "verified deferred capture" >/dev/null
 
 # Tend into the justified project structure and hatch a durable receipt.
 "$REPO/.nest/nestling.sh" claim establish-repository >/dev/null
