@@ -1,10 +1,10 @@
 # 🪺 nestlings
 
-A tiny, file-based protocol for agents that tend a folder.
+A tiny, file-based protocol for making a folder ready to receive material.
 
 One script. One folder convention.
 
-When you open `.nest/in/`, you are looking at the work that is ready now.
+When you open `.nest/in/`, you are looking at the items ready to be tended.
 
 ```
 .nest/
@@ -17,16 +17,28 @@ When you open `.nest/in/`, you are looking at the work that is ready now.
 
 ## What a nest is for
 
-A nest makes a folder into an active process.
+A nest is the entrance and transport layer for a folder. A new repository can
+begin with only `.nest/`: material can arrive before anyone knows whether it
+will become evidence, memory, work, or nothing at all.
 
-Items arrive in `in/`. A nestling tends to them. Tended items land in `out/`. Dropped items land in `dropped/` with a reason.
+Items arrive in `in/`. A human, agent, or process tends them according to the
+folder's local policy. Hatched items land in `out/`; dropped items land in
+`dropped/` with a reason.
 
-This is useful in two ways:
+Nestlings owns safe intake, claiming, and disposition. It does not decide what
+an item means, preserve project memory, plan work, or require a particular
+agent runtime. Those choices belong to the tender and the folder. Other tools
+may be selected as destinations when tending reveals a need for them, but they
+are optional: a repository can remain useful with only its nest.
 
-* **As a work tray.** Someone leaves work for the nestling. The nestling does it. The originator collects the result from `out/`.
-* **As an autonomous process.** The folder just runs. Items arrive, get tended, and `out/` accumulates as a record of what happened.
+An item is one file or directory accepted into the nest. It may be an
+unclassified piece of material, a shaped request, or material accompanied by a
+note about what should happen. An item does not have to be a task.
 
-Both uses share the same mechanics. Passing items from `in/` to `out/` or `dropped/` is free logging: you can look at `out/` to see what has been actioned.
+To **tend** is to apply the folder's local policy to a claimed item. To
+**hatch** is to complete that tending successfully by placing its result in
+`out/`. Passing items through `in/`, `out/`, and `dropped/` leaves a simple
+filesystem record of what happened.
 
 ## How nestlings works
 
@@ -58,18 +70,18 @@ An item can be a file or a directory.
 
 The file system is the protocol.
 
-## Agent loop
+## Tending loop
 
 1. Look at `.nest/in/`
 2. Pick one ready item
 3. Claim it by renaming it with `.tending`
 4. Read `.nest/tend.md` if present
-5. Work
+5. Apply the local policy
 6. Either:
-   * place the result in `.nest/out/` using `.landing`
+   * hatch by placing the result in `.nest/out/` using `.landing`
    * or move the item to `.nest/dropped/` and write a reason file
 
-Never touch anything ending in `.landing` or `.tending`.
+Other tenders must not touch anything ending in `.landing` or `.tending`.
 
 An abandoned claim is not inferred from age alone. `stale` reports claimed
 items older than a threshold without changing them; the process that owns the
@@ -82,16 +94,18 @@ Set `NEST_MAX_ATTEMPTS` to a non-negative integer to change the default limit
 of three. Producers should add `.recoverable` only when repeating the item is
 safe. Nestlings does not decide whether a tender process is still alive.
 
-## Communicating between nests
+## Passing between nests
 
-When two agents talk through nests, replies go to the other agent's `in/`, not your own `out/`.
+When two folders communicate through nests, new material goes to the receiving
+folder's `in/`, not the sending folder's `out/`.
 
-Your `out/` is where you put items you have tended.
-Their `in/` is where you put items for them to tend.
+The sender's `out/` records what it has tended. The receiver's `in/` holds what
+it is being asked to tend.
 
 ## tend.md
 
-`.nest/tend.md` is an optional conventional file that tells a human or agent what to do with items in the nest.
+`.nest/tend.md` is an optional conventional file that states the folder's local
+policy for tending items.
 
 If present, read it before tending.
 
